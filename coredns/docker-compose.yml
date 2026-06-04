@@ -1,0 +1,61 @@
+name: registrator-coredns
+
+services:
+
+  etcd:
+    image: gcr.io/etcd-development/etcd:${ETCD3_VERSION}
+    command: >
+      /usr/local/bin/etcd
+      --name etcd0
+      --advertise-client-urls http://etcd:2379
+      --listen-client-urls http://0.0.0.0:2379
+      --initial-advertise-peer-urls http://etcd:2380
+      --listen-peer-urls http://0.0.0.0:2380
+      --initial-cluster etcd0=http://etcd:2380
+    labels:
+      - "SERVICE_IGNORE=true"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/etcdctl", "endpoint", "health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  coredns:
+    image: coredns/coredns:${COREDNS_VERSION}
+    command: -conf /etc/coredns/Corefile
+    ports:
+      - "5300:53/udp"
+      - "5300:53/tcp"
+    labels:
+      - "SERVICE_IGNORE=true"
+    volumes:
+      - ./Corefile:/etc/coredns/Corefile:ro
+    depends_on:
+      etcd:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/coredns", "-plugins"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  registrator:
+    image: fayrus/registrator:${REGISTRATOR_VERSION}
+    command: -internal "coredns://etcd:2379/skydns?zone=service.local"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    depends_on:
+      etcd:
+        condition: service_healthy
+      coredns:
+        condition: service_healthy
+
+  # Test service
+  test-svc:
+    image: traefik/whoami
+    environment:
+      - SERVICE_NAME=whoami
+
+networks:
+  default:
+    name: registrator-coredns

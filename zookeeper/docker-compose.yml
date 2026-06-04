@@ -1,0 +1,37 @@
+name: registrator-zookeeper
+
+services:
+
+  zookeeper:
+    image: zookeeper:${ZOOKEEPER_VERSION}
+    ports:
+      - "2181:2181"
+    labels:
+      - "SERVICE_IGNORE=true"
+    environment:
+      ZOO_LOG4J_PROP: "WARN,CONSOLE"
+    healthcheck:
+      test: ["CMD-SHELL", "zkServer.sh status"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  registrator:
+    image: fayrus/registrator:${REGISTRATOR_VERSION}
+    command: -internal zookeeper://zookeeper:2181/services
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+
+  # Test service
+  test-svc:
+    image: traefik/whoami
+    environment:
+      - SERVICE_NAME=whoami
+      - SERVICE_TAGS=test
+
+networks:
+  default:
+    name: registrator-zookeeper

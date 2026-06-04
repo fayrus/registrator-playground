@@ -1,0 +1,49 @@
+name: registrator-consul
+
+services:
+
+  consul:
+    image: hashicorp/consul:${CONSUL_VERSION}
+    command: agent -dev -client=0.0.0.0 -log-level=warn -enable-local-script-checks
+    ports:
+      - "8500:8500"
+    labels:
+      - "SERVICE_IGNORE=true"
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  registrator:
+    image: fayrus/registrator:${REGISTRATOR_VERSION}
+    container_name: registrator
+    command: '-internal -resync 10 consul://consul:8500'
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    depends_on:
+      consul:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=false"
+
+  # Test service — HTTP check
+  test-http:
+    image: traefik/whoami
+    environment:
+      - SERVICE_NAME=whoami
+      - SERVICE_TAGS=test
+      - SERVICE_CHECK_HTTP=/
+      - SERVICE_CHECK_INTERVAL=10s
+      - SERVICE_CHECK_TIMEOUT=3s
+
+  # Test service — enable_tag_override
+  test-tag-override:
+    image: traefik/whoami
+    environment:
+      - SERVICE_NAME=whoami-tag-override
+      - SERVICE_ENABLE_TAG_OVERRIDE=true
+
+networks:
+  default:
+    name: registrator-consul

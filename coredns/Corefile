@@ -1,0 +1,14 @@
+service.local:53 {
+    etcd {
+        path /skydns
+        endpoint http://etcd:2379
+    }
+    log
+    errors
+}
+
+. {
+    forward . 8.8.8.8
+    log
+    errors
+}
