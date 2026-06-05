@@ -1,7 +1,6 @@
 name: registrator-zookeeper
 
 services:
-
   zookeeper:
     image: zookeeper:${ZOOKEEPER_VERSION}
     ports:

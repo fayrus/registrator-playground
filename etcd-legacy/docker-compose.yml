@@ -1,0 +1,43 @@
+name: registrator-etcd-legacy
+
+services:
+  etcd:
+    image: gcr.io/etcd-development/etcd:${ETCD_LEGACY_VERSION}
+    command: >
+      /usr/local/bin/etcd
+      --name etcd0
+      --advertise-client-urls http://etcd:2379
+      --listen-client-urls http://0.0.0.0:2379
+      --initial-advertise-peer-urls http://etcd:2380
+      --listen-peer-urls http://0.0.0.0:2380
+      --initial-cluster etcd0=http://etcd:2380
+      --enable-v2=true
+    ports:
+      - "2379:2379"
+    labels:
+      - "SERVICE_IGNORE=true"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/etcdctl", "endpoint", "health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  registrator:
+    image: fayrus/registrator:${REGISTRATOR_VERSION}
+    command: -internal etcd-legacy://etcd:2379/services
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    depends_on:
+      etcd:
+        condition: service_healthy
+
+  # Test service
+  test-svc:
+    image: traefik/whoami
+    environment:
+      - SERVICE_NAME=whoami
+      - SERVICE_TAGS=test
+
+networks:
+  default:
+    name: registrator-etcd-legacy

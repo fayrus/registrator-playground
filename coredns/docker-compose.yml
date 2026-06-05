@@ -1,9 +1,8 @@
 name: registrator-coredns
 
 services:
-
   etcd:
-    image: gcr.io/etcd-development/etcd:${ETCD3_VERSION}
+    image: gcr.io/etcd-development/etcd:${ETCD_VERSION}
     command: >
       /usr/local/bin/etcd
       --name etcd0
@@ -40,7 +39,8 @@ services:
       retries: 10
 
   registrator:
-    image: fayrus/registrator:${REGISTRATOR_VERSION}
+    #image: fayrus/registrator:${REGISTRATOR_VERSION}
+    image: development/registrator:local
     command: -internal "coredns://etcd:2379/skydns?zone=service.local"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock
