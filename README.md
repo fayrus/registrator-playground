@@ -18,7 +18,7 @@ docker compose down
 
 ### Consul
 
-**Backend:** Consul 1.22.6 — `consul://`
+**Backend:** Consul 2.0.4 — `consul://`
 
 ```bash
 curl http://localhost:8500/v1/agent/services | jq
@@ -39,7 +39,7 @@ curl http://localhost:8500/v1/agent/services | jq
 
 ### etcd
 
-**Backend:** etcd 3.6 — `etcd://` (gRPC v3)
+**Backend:** etcd 3.7 — `etcd://` (gRPC v3)
 
 ```bash
 docker exec registrator-etcd-etcd-1 etcdctl get /services --prefix
@@ -88,7 +88,7 @@ curl "http://localhost:2379/v2/keys/services?recursive=true" | jq
 
 ### ZooKeeper
 
-**Backend:** ZooKeeper 3.9.3 — `zookeeper://`
+**Backend:** ZooKeeper 3.9.6 — `zookeeper://`
 
 ```bash
 docker exec registrator-zookeeper-zookeeper-1 zkCli.sh ls /services
@@ -102,7 +102,7 @@ docker exec registrator-zookeeper-zookeeper-1 zkCli.sh ls /services
 
 ### CoreDNS
 
-**Backend:** CoreDNS 1.14.3 + etcd — `coredns://`
+**Backend:** CoreDNS 1.14.7 + etcd 3.7 — `coredns://`
 
 ```bash
 # Check entries in etcd
