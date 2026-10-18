@@ -39,8 +39,7 @@ services:
       retries: 10
 
   registrator:
-    #image: fayrus/registrator:${REGISTRATOR_VERSION}
-    image: development/registrator:local
+    image: fayrus/registrator:${REGISTRATOR_VERSION}
     command: -internal "coredns://etcd:2379/skydns?zone=service.local"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock
