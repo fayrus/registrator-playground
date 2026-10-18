@@ -1,20 +1,20 @@
 # Registrator Playground
 
-Local test environments for running [registrator](https://github.com/fayrus/registrator) against different backends.
+Local playground for running [registrator](https://github.com/fayrus/registrator) against different backends.
 Each subfolder contains a `docker-compose.yml` for a specific backend.
 
 ## Workflow
 
 ```bash
-cd <environment>
-docker compose up
+cd <backend>
+docker compose up -d
 
-# verify (see each environment below)
+# verify (see each backend below)
 
 docker compose down
 ```
 
-## Environments
+## Backends
 
 ### Consul
 
@@ -26,11 +26,18 @@ curl http://localhost:8500/v1/agent/services | jq
 
 ```json
 {
-  "whoami-...": {
+  "<id>:registrator-consul-test-http-1:80": {
     "Service": "whoami",
     "Tags": ["test"],
-    "Address": "172.x.x.x",
+    "Address": "192.168.x.x",
     "Port": 80
+  },
+  "<id>:registrator-consul-test-tag-override-1:80": {
+    "Service": "whoami-tag-override",
+    "Tags": [],
+    "Address": "192.168.x.x",
+    "Port": 80,
+    "EnableTagOverride": true
   }
 }
 ```
@@ -91,7 +98,7 @@ curl "http://localhost:2379/v2/keys/services?recursive=true" | jq
 **Backend:** ZooKeeper 3.9.6 — `zookeeper://`
 
 ```bash
-docker exec registrator-zookeeper-zookeeper-1 zkCli.sh ls /services
+docker exec registrator-zookeeper-zookeeper-1 zkCli.sh ls /services 2>/dev/null | grep '^\['
 ```
 
 ```
@@ -123,4 +130,5 @@ whoami.service.local.  300  IN  A  192.168.x.x
 
 - Versions are managed centrally in the root `.env` file.
 - Backend infrastructure containers are excluded from service registration via `SERVICE_IGNORE=true`.
-- Running multiple environments simultaneously is supported — each uses an isolated Docker network (`registrator-{backend}`).
+- Running multiple backends simultaneously is supported — each uses an isolated Docker network (`registrator-{backend}`).
+- Exception: `etcd` and `etcd-legacy` are two versions of the same project and both publish port `2379` on the host, so they cannot run at the same time. Stop one before starting the other.
